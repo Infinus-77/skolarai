@@ -1,180 +1,72 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+
+{% block content %}
 <div class="text-center">
   <h1>Welcome, {{ user }} 🎉</h1>
-  <p class="lead">
-    Search for the best <strong>Courses</strong> or
-    <strong>Scholarships</strong>
-  </p>
+  <p class="lead">Find the best India-based <strong>Courses</strong> & <strong>Scholarships</strong></p>
 </div>
 
-<hr class="my-4" />
+<hr class="my-4">
 
-<!-- COURSES SECTION -->
+<!-- Course Search + Filter -->
+<div class="row mb-4">
+  <div class="col-md-8">
+    <form method="GET" action="{{ url_for('dashboard') }}" class="d-flex">
+      <input type="text" name="q" class="form-control me-2"
+             placeholder="Search courses..." value="{{ query }}">
+      <select name="filter" class="form-select me-2">
+        <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All</option>
+        <option value="free" {% if filter_type == 'free' %}selected{% endif %}>Free</option>
+        <option value="paid" {% if filter_type == 'paid' %}selected{% endif %}>Paid</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+  </div>
+</div>
+
+<!-- Courses -->
 <h2>📚 Courses</h2>
-<form
-  method="POST"
-  action="{{ url_for('dashboard') }}"
-  class="row justify-content-center mt-3 position-relative"
->
-  <input type="hidden" name="section" value="courses" />
-  <div class="col-md-5 position-relative">
-    <input
-      type="text"
-      id="course-query"
-      name="query"
-      class="form-control form-control-lg"
-      placeholder="Search courses..."
-    />
-    <ul
-      class="list-group position-absolute w-100"
-      id="course-query-suggestions"
-      style="z-index: 1000"
-    ></ul>
-  </div>
-  <div class="col-md-3">
-    <select name="filter" class="form-select form-select-lg">
-      <option value="">All</option>
-      <option value="free">Free</option>
-      <option value="paid">Paid</option>
-    </select>
-  </div>
-  <div class="col-md-2">
-    <button type="submit" class="btn btn-primary btn-lg w-100">Search</button>
-  </div>
-</form>
-
-{% if courses and courses|length > 0 %}
-<div class="row mt-4">
+<div class="row mt-3">
   {% for course in courses %}
-  <div class="col-md-4 mb-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">{{ course.title }}</h5>
-        <p class="card-text">
-          <strong>Provider:</strong> {{ course.provider }} <br />
-          <strong>Rating:</strong> ⭐ {{ course.rating }} <br />
-          <strong>Price:</strong> {{ course.price }}
-        </p>
-        <a
-          href="{{ course.url }}"
-          target="_blank"
-          class="btn btn-outline-primary w-100"
-          >View Course</a
-        >
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">{{ course.title }}</h5>
+          <p class="card-text">
+            <strong>Provider:</strong> {{ course.provider }} <br>
+            <strong>Rating:</strong> ⭐ {{ course.rating }} <br>
+            <strong>Price:</strong> {{ course.price }}
+          </p>
+          <a href="{{ course.url }}" target="_blank" class="btn btn-outline-primary w-100">View Course</a>
+        </div>
       </div>
     </div>
-  </div>
+  {% else %}
+    <p class="text-muted">No courses found.</p>
   {% endfor %}
 </div>
-{% else %}
-<!-- Featured Courses -->
-<h5 class="mt-4">✨ Featured Courses</h5>
-<div class="row mt-2">
-  {% for course in featured_courses %}
-  <div class="col-md-3 mb-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body">
-        <h6 class="card-title">{{ course.title }}</h6>
-        <p class="card-text">
-          <small><strong>Provider:</strong> {{ course.provider }}</small>
-        </p>
-        <a
-          href="{{ course.url }}"
-          target="_blank"
-          class="btn btn-sm btn-outline-primary w-100"
-          >View</a
-        >
-      </div>
-    </div>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
 
-<hr class="my-4" />
+<hr class="my-4">
 
-<!-- SCHOLARSHIPS SECTION -->
+<!-- Scholarships -->
 <h2>🎓 Scholarships (India)</h2>
-<form
-  method="POST"
-  action="{{ url_for('dashboard') }}"
-  class="row justify-content-center mt-3"
->
-  <input type="hidden" name="section" value="scholarships" />
-  <div class="col-md-6">
-    <input
-      type="text"
-      name="query"
-      class="form-control form-control-lg"
-      placeholder="Search scholarships..."
-    />
-  </div>
-  <div class="col-md-2">
-    <button type="submit" class="btn btn-success btn-lg w-100">Search</button>
-  </div>
-</form>
-
-<div class="row mt-4">
+<div class="row mt-3">
   {% for s in scholarships %}
-  <div class="col-md-4 mb-4">
-    <div class="card h-100 shadow-sm">
-      <div class="card-body">
-        <h5 class="card-title">{{ s.title }}</h5>
-        <p class="card-text">
-          <strong>Provider:</strong> {{ s.provider }} <br />
-          <strong>Eligibility:</strong> {{ s.eligibility }}
-        </p>
-        <a
-          href="{{ s.url }}"
-          target="_blank"
-          class="btn btn-outline-success w-100"
-          >View Details</a
-        >
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">{{ s.title }}</h5>
+          <p class="card-text">
+            <strong>Provider:</strong> {{ s.provider }} <br>
+            <strong>Eligibility:</strong> {{ s.eligibility }} <br>
+            <strong>Deadline:</strong> {{ s.deadline }}
+          </p>
+          <a href="{{ s.url }}" target="_blank" class="btn btn-outline-success w-100">View Details</a>
+        </div>
       </div>
     </div>
-  </div>
+  {% else %}
+    <p class="text-muted">No scholarships found.</p>
   {% endfor %}
 </div>
-
-<!-- Suggestion Script (Courses Only) -->
-<script>
-  function setupSuggestions(inputId, section) {
-    const input = document.getElementById(inputId);
-    const suggestionBox = document.getElementById(inputId + "-suggestions");
-
-    input.addEventListener("input", () => {
-      const query = input.value;
-      if (query.length < 2) {
-        suggestionBox.innerHTML = "";
-        return;
-      }
-
-      fetch(`/suggest?q=${query}&section=${section}`)
-        .then((res) => res.json())
-        .then((data) => {
-          suggestionBox.innerHTML = "";
-          data.forEach((item) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item list-group-item-action";
-            li.textContent = item;
-            li.onclick = () => {
-              input.value = item;
-              suggestionBox.innerHTML = "";
-            };
-            suggestionBox.appendChild(li);
-          });
-        });
-    });
-
-    // Hide suggestions when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!input.contains(e.target)) {
-        suggestionBox.innerHTML = "";
-      }
-    });
-  }
-
-  setupSuggestions("course-query", "courses");
-</script>
-
 {% endblock %}

@@ -1,86 +1,129 @@
-import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # change this in production!
+app.secret_key = "supersecretkey"
+
+# --- Database Config ---
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///skolarai.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db = SQLAlchemy(app)
 
 
-# --- Database Setup ---
-def init_db():
-    conn = sqlite3.connect("users.db")
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
-        )
-    """)
-    conn.commit()
-    conn.close()
-
-init_db()
+# --- Models ---
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
 
 
-# --- Dummy Data ---
-courses_data = [
-    {"title": "Python for Beginners", "provider": "Coursera", "rating": "4.7", "price": "Free", "url": "https://www.coursera.org"},
-    {"title": "AI & Machine Learning Bootcamp", "provider": "Udemy", "rating": "4.6", "price": "$19.99", "url": "https://www.udemy.com"},
-    {"title": "Data Science Fundamentals", "provider": "edX", "rating": "4.8", "price": "Free", "url": "https://www.edx.org"},
-    {"title": "Full Stack Web Development", "provider": "Udemy", "rating": "4.5", "price": "$14.99", "url": "https://www.udemy.com"},
-    {"title": "Deep Learning Specialization", "provider": "Coursera", "rating": "4.9", "price": "$49/month", "url": "https://www.coursera.org"},
-    {"title": "Frontend Development with React", "provider": "Udacity", "rating": "4.7", "price": "Free", "url": "https://www.udacity.com"}
-]
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    provider = db.Column(db.String(100))
+    rating = db.Column(db.String(20))
+    price = db.Column(db.String(50))
+    url = db.Column(db.String(300))
+    tags = db.Column(db.String(200))
+    region = db.Column(db.String(50), default="India")
+    verified_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-scholarships_data = [
-    {"title": "Pre-Matric Scholarship for Minorities", "provider": "Ministry of Minority Affairs, Govt. of India", "eligibility": "Minority students, Class 1-10", "url": "https://scholarships.gov.in/pre-matric-minorities"},
-    {"title": "Merit-cum-Means Scholarship for Professional & Technical Courses", "provider": "Ministry of Minority Affairs, Govt. of India", "eligibility": "UG / PG in professional & technical education", "url": "https://scholarships.gov.in/mcm-professional-technical"},
-    {"title": "Foundation For Excellence (FFE) Scholarship", "provider": "FFE", "eligibility": "Low-income, academically gifted UG/PG students", "url": "https://www.ffe.org/"},
-    {"title": "Central Sector Scheme of Scholarships", "provider": "Government of India", "eligibility": "College / University students", "url": "https://scholarships.gov.in/central-sector"},
-    {"title": "Sahu Jain Trust Educational Scholarships", "provider": "Sahu Jain Trust", "eligibility": "Meritorious students, UG/PG courses", "url": "http://sahujaintrust.timesofindia.com/"},
-    {"title": "Tata Scholarship for Engineering Students", "provider": "Tata Group", "eligibility": "UG Engineering students in India", "url": "https://www.tatatrusts.org/"}
-]
+
+class Scholarship(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    provider = db.Column(db.String(100))
+    eligibility = db.Column(db.String(200))
+    deadline = db.Column(db.String(100))
+    url = db.Column(db.String(300))
+    tags = db.Column(db.String(200))
+    region = db.Column(db.String(50), default="India")
+    verified_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+# --- Auto-Seed Function ---
+def seed_data():
+    if Course.query.count() == 0 and Scholarship.query.count() == 0:
+        print("🌱 Seeding database with sample data...")
+
+        courses = [
+            Course(
+                title="Python for Data Science",
+                provider="Coursera",
+                rating="4.8",
+                price="Free",
+                url="https://www.coursera.org/learn/python-for-data-science",
+                tags="AI, Data Science"
+            ),
+            Course(
+                title="AI & Machine Learning Bootcamp",
+                provider="Udemy",
+                rating="4.6",
+                price="₹499",
+                url="https://www.udemy.com/course/ai-and-machine-learning-bootcamp",
+                tags="AI, ML"
+            ),
+            Course(
+                title="Full Stack Web Development",
+                provider="edX",
+                rating="4.7",
+                price="Free",
+                url="https://www.edx.org/learn/web-development",
+                tags="Web Development"
+            )
+        ]
+
+        scholarships = [
+            Scholarship(
+                title="Central Sector Scholarship",
+                provider="Govt. of India",
+                eligibility="UG Students",
+                deadline="31-12-2024",
+                url="https://scholarships.gov.in",
+                tags="Government, India"
+            ),
+            Scholarship(
+                title="Tata Trust Scholarship",
+                provider="Tata Trust",
+                eligibility="Engineering UG",
+                deadline="30-09-2024",
+                url="https://www.tatatrusts.org",
+                tags="Private, India"
+            ),
+            Scholarship(
+                title="Sahu Jain Trust Scholarship",
+                provider="Sahu Jain Trust",
+                eligibility="UG & PG Students",
+                deadline="15-08-2024",
+                url="http://sahujaintrust.timesofindia.com/",
+                tags="Private, India"
+            )
+        ]
+
+        db.session.add_all(courses + scholarships)
+        db.session.commit()
+        print("✅ Seeding completed!")
 
 
 # --- Routes ---
 @app.route("/")
 def home():
-    return render_template("index.html", title="SKOLARAI", current_year=datetime.now().year)
-
-
-@app.route("/signin", methods=["GET", "POST"])
-def signin():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-
-        conn = sqlite3.connect("users.db")
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE username = ?", (username,))
-        user = c.fetchone()
-        conn.close()
-
-        if user and check_password_hash(user[3], password):
-            session["user"] = username
-            flash("Signed in successfully ✅", "success")
-            return redirect(url_for("dashboard"))
-        else:
-            flash("Invalid username or password ❌", "danger")
-            return redirect(url_for("signin"))
-
-    return render_template("signin.html", title="Sign In - SKOLARAI", current_year=datetime.now().year)
+    # If logged in, go to dashboard directly
+    if "user" in session:
+        return redirect(url_for("dashboard"))
+    return render_template("index.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
+        username = request.form["username"]
+        email = request.form["email"]
+        password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
 
         if password != confirm_password:
             flash("Passwords do not match ❌", "danger")
@@ -89,19 +132,36 @@ def register():
         hashed_password = generate_password_hash(password)
 
         try:
-            conn = sqlite3.connect("users.db")
-            c = conn.cursor()
-            c.execute("INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-                      (username, email, hashed_password))
-            conn.commit()
-            conn.close()
+            new_user = User(username=username, email=email, password=hashed_password)
+            db.session.add(new_user)
+            db.session.commit()
+
             flash("Account created successfully 🎉 Please sign in.", "success")
             return redirect(url_for("signin"))
-        except sqlite3.IntegrityError:
+        except:
             flash("Username or email already exists ❌", "danger")
             return redirect(url_for("register"))
 
-    return render_template("register.html", title="Register - SKOLARAI", current_year=datetime.now().year)
+    return render_template("register.html")
+
+
+@app.route("/signin", methods=["GET", "POST"])
+def signin():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session["user"] = username
+            session["user_id"] = user.id
+            flash("Signed in successfully ✅", "success")
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Invalid username or password ❌", "danger")
+            return redirect(url_for("signin"))
+
+    return render_template("signin.html")
 
 
 @app.route("/dashboard", methods=["GET", "POST"])
@@ -110,58 +170,45 @@ def dashboard():
         flash("Please sign in to access the dashboard ⚠️", "warning")
         return redirect(url_for("signin"))
 
-    course_results = []
-    scholarship_results = scholarships_data[:]  # show all by default
+    query = request.args.get("q", "")  # search term
+    filter_type = request.args.get("filter", "all")  # all, free, paid
 
-    if request.method == "POST":
-        section = request.form.get("section")
-        query = request.form.get("query", "").lower()
-        filter_option = request.form.get("filter")
+    courses_query = Course.query.filter_by(region="India")
 
-        if section == "courses":
-            filtered = courses_data
-            if filter_option == "free":
-                filtered = [c for c in filtered if c["price"].lower() == "free"]
-            elif filter_option == "paid":
-                filtered = [c for c in filtered if c["price"].lower() != "free"]
+    # Search by title or tags
+    if query:
+        courses_query = courses_query.filter(
+            (Course.title.ilike(f"%{query}%")) | (Course.tags.ilike(f"%{query}%"))
+        )
 
-            course_results = [c for c in filtered if query in c["title"].lower() or query in c["provider"].lower()]
+    # Apply filter
+    if filter_type == "free":
+        courses_query = courses_query.filter(Course.price.ilike("%free%"))
+    elif filter_type == "paid":
+        courses_query = courses_query.filter(Course.price.notilike("%free%"))
 
-        elif section == "scholarships":
-            scholarship_results = [s for s in scholarships_data if query in s["title"].lower() or query in s["provider"].lower()]
-
-    featured_courses = courses_data[:4]
+    courses = courses_query.all()
+    scholarships = Scholarship.query.filter_by(region="India").limit(6).all()
 
     return render_template(
         "dashboard.html",
-        title="Dashboard - SKOLARAI",
         user=session["user"],
-        courses=course_results,
-        scholarships=scholarship_results,
-        featured_courses=featured_courses,
-        current_year=datetime.now().year
+        courses=courses,
+        scholarships=scholarships,
+        query=query,
+        filter_type=filter_type
     )
-
-
-# Suggestions only for courses
-@app.route("/suggest", methods=["GET"])
-def suggest():
-    query = request.args.get("q", "").lower()
-    section = request.args.get("section", "")
-
-    suggestions = []
-    if section == "courses":
-        suggestions = [c["title"] for c in courses_data if query in c["title"].lower()]
-
-    return jsonify(suggestions)
 
 
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
+    session.clear()
     flash("You have been logged out ✅", "info")
-    return redirect(url_for("home"))
+    return redirect(url_for("home"))  # Redirect to landing page
 
 
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        seed_data()  # <-- Auto-seed on first run
     app.run(debug=True)

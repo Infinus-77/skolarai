@@ -1,9 +1,14 @@
 {% extends "base.html" %} {% block content %}
-<div class="text-center">
-  <h1>Welcome to SKOLARAI</h1>
-  <p class="lead">Your AI-powered learning assistant prototype.</p>
-  <a href="{{ url_for('signin') }}" class="btn btn-primary btn-lg mt-3"
-    >Get Started</a
-  >
+<div class="container text-center mt-5">
+  <h1>Welcome to SKOLARAI 🚀</h1>
+  <p class="lead">Your AI-powered assistant for Courses & Scholarships</p>
+  <div class="mt-4">
+    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-2"
+      >Get Started</a
+    >
+    <a href="{{ url_for('signin') }}" class="btn btn-outline-secondary btn-lg"
+      >Sign In</a
+    >
+  </div>
 </div>
 {% endblock %}

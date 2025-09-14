@@ -1,69 +1,38 @@
 {% extends "base.html" %} {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h2 class="text-center mb-4">Create an Account</h2>
-
-        {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-
-        <form method="POST" action="{{ url_for('register') }}">
-          <div class="mb-3">
-            <label for="username" class="form-label">Username</label>
-            <input
-              type="text"
-              class="form-control"
-              id="username"
-              name="username"
-              required
-            />
-          </div>
-
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input
-              type="email"
-              class="form-control"
-              id="email"
-              name="email"
-              required
-            />
-          </div>
-
-          <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input
-              type="password"
-              class="form-control"
-              id="password"
-              name="password"
-              required
-            />
-          </div>
-
-          <div class="mb-3">
-            <label for="confirm_password" class="form-label"
-              >Confirm Password</label
-            >
-            <input
-              type="password"
-              class="form-control"
-              id="confirm_password"
-              name="confirm_password"
-              required
-            />
-          </div>
-
-          <button type="submit" class="btn btn-success w-100">Register</button>
-        </form>
-
-        <p class="text-center mt-3">
-          Already have an account? <a href="{{ url_for('signin') }}">Sign In</a>
-        </p>
-      </div>
+<div class="container mt-5">
+  <h2 class="text-center">Create Your Account</h2>
+  <form method="POST" class="mt-4">
+    <!-- Username -->
+    <div class="mb-3">
+      <label class="form-label">Username</label>
+      <input type="text" name="username" class="form-control" required />
     </div>
-  </div>
+
+    <!-- Email -->
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" required />
+    </div>
+
+    <!-- Password -->
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" name="password" class="form-control" required />
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="mb-3">
+      <label class="form-label">Confirm Password</label>
+      <input
+        type="password"
+        name="confirm_password"
+        class="form-control"
+        required
+      />
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn btn-primary w-100">Register</button>
+  </form>
 </div>
 {% endblock %}
