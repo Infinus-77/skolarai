@@ -171,7 +171,7 @@ def dashboard():
         return redirect(url_for("signin"))
 
     query = request.args.get("q", "")  # search term
-    filter_type = request.args.get("filter", "all")  # all, free, paid
+    filter_type = request.args.get("filter", "top")  # default: top 3
 
     courses_query = Course.query.filter_by(region="India")
 
@@ -187,7 +187,12 @@ def dashboard():
     elif filter_type == "paid":
         courses_query = courses_query.filter(Course.price.notilike("%free%"))
 
-    courses = courses_query.all()
+    # Show only 3 by default, all if filter = all
+    if filter_type == "all":
+        courses = courses_query.all()
+    else:
+        courses = courses_query.limit(3).all()
+
     scholarships = Scholarship.query.filter_by(region="India").limit(6).all()
 
     return render_template(
@@ -198,6 +203,7 @@ def dashboard():
         query=query,
         filter_type=filter_type
     )
+
 
 
 @app.route("/logout")
